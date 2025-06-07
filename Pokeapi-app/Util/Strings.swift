@@ -17,4 +17,6 @@ enum Strings {
     static let tryWithAnotherParam = "Try searching by name or number"
     static let loading = "Loading..."
     static let errorMessage = "Something went wrong. Please try again."
+    static let tryAgain = "Try Again"
+    static let unknownError = "Unknown error"
 }

@@ -17,6 +17,7 @@ final class PokedexListViewModel: ObservableObject {
     @Published var searchText: String = ""
     @Published var sortType: SortType = .number
     @Published var isLoading: Bool = false
+    @Published var errorMessage: String? = nil
 
     private var currentOffset = 0
     private let limit = 15
@@ -63,13 +64,16 @@ final class PokedexListViewModel: ObservableObject {
         guard pokemons.last?.id ?? 0 < maxPokemonID else { return }
 
         isLoading = true
+        errorMessage = nil
+
         do {
             let newPokemons = try await fetchPokemonUseCase.execute(limit: limit, offset: currentOffset)
             pokemons.append(contentsOf: newPokemons)
             currentOffset += limit
         } catch {
-            print("Error loading Pokémon: \(error)")
+            errorMessage = "Failed to load Pokémon. Please try again."
         }
+
         isLoading = false
     }
 }

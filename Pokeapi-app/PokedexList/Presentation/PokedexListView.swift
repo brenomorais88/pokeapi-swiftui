@@ -72,9 +72,39 @@ struct PokedexListView: View {
         .padding()
     }
 
+    private var errorState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 48))
+                .foregroundColor(.orange)
+
+            Text(viewModel.errorMessage ?? Strings.unknownError)
+                .font(.headline)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.gray)
+
+            Button(Strings.tryAgain) {
+                Task { await viewModel.loadNextPage() }
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 10)
+            .background(Color.red.opacity(0.8))
+            .foregroundColor(.white)
+            .cornerRadius(10)
+        }
+        .padding()
+    }
+
     private var pokemonGrid: some View {
         Group {
-            if viewModel.filteredPokemons.isEmpty && !viewModel.searchText.isEmpty {
+            if viewModel.errorMessage != nil {
+                VStack {
+                    Spacer()
+                    errorState
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.filteredPokemons.isEmpty && !viewModel.searchText.isEmpty {
                 VStack {
                     Spacer()
                     emptyState
