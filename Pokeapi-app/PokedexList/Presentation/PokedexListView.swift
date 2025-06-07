@@ -34,8 +34,8 @@ struct PokedexListView: View {
         HStack(spacing: 12) {
             TextField(Strings.searchPlaceholder,
                       text: $viewModel.searchText)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding(.horizontal)
+            .textFieldStyle(RoundedBorderTextFieldStyle())
+            .padding(.horizontal)
 
             Menu {
                 Picker(Strings.sortBy, selection: $viewModel.sortType) {
@@ -60,6 +60,11 @@ struct PokedexListView: View {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
                 ForEach(viewModel.filteredPokemons) { pokemon in
                     PokemonCardView(pokemon: pokemon)
+                        .onAppear {
+                            if pokemon == viewModel.filteredPokemons.last {
+                                Task { await viewModel.loadNextPage() }
+                            }
+                        }
                 }
             }
             .padding()
