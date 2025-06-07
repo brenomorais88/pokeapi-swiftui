@@ -1,0 +1,52 @@
+//
+//  PokemonDetailViewModel.swift
+//  Pokeapi-app
+//
+//  Created by Breno Morais on 07/06/25.
+//
+
+import SwiftUI
+
+final class PokemonDetailViewModel: ObservableObject {
+    let id: Int
+    let name: String
+    let imageURL: URL?
+    var goBack: (() -> Void)? = nil
+
+    @Published var types: [String] = []
+    @Published var weight: String = "--"
+    @Published var height: String = "--"
+    @Published var moves: [String] = []
+    @Published var description: String = ""
+    @Published var stats: [PokemonStatViewData] = []
+
+    var backgroundColor: Color {
+        guard let mainType = types.first?.lowercased() else {
+            return .gray
+        }
+
+        return PokemonTypeColor.color(for: mainType)
+    }
+
+    init(id: Int, name: String, imageURL: URL?) {
+        self.id = id
+        self.name = name.capitalized
+        self.imageURL = imageURL
+    }
+
+    func fetchDetails() async {
+        do {
+            let details = try await PokemonDetailAPIService().fetchDetails(id: id)
+            await MainActor.run {
+                types = details.types
+                weight = "\(Double(details.weight) / 10.0) kg"
+                height = "\(Double(details.height) / 10.0) m"
+                moves = details.moves.prefix(2).map { $0.capitalized }
+                description = details.description
+                stats = details.stats.map { PokemonStatViewData(label: $0.label, value: $0.value) }
+            }
+        } catch {
+            print("Erro ao carregar detalhes: \(error)")
+        }
+    }
+}

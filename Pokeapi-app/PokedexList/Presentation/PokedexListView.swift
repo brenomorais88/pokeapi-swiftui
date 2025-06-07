@@ -59,12 +59,22 @@ struct PokedexListView: View {
         ScrollView {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
                 ForEach(viewModel.filteredPokemons) { pokemon in
-                    PokemonCardView(pokemon: pokemon)
-                        .onAppear {
-                            if pokemon == viewModel.filteredPokemons.last {
-                                Task { await viewModel.loadNextPage() }
+                    NavigationLink(
+                        destination: PokemonDetailView(
+                            viewModel: PokemonDetailViewModel(
+                                id: pokemon.id,
+                                name: pokemon.name,
+                                imageURL: pokemon.imageURL
+                            )
+                        )
+                    ) {
+                        PokemonCardView(pokemon: pokemon)
+                            .onAppear {
+                                if pokemon == viewModel.filteredPokemons.last {
+                                    Task { await viewModel.loadNextPage() }
+                                }
                             }
-                        }
+                    }
                 }
             }
             .padding()
