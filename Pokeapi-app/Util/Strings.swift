@@ -13,7 +13,8 @@ enum Strings {
     static let sortBy = "Sort by"
     static let sortByNumber = "Number"
     static let sortByName = "Name"
-//    static let noResults = "No Pokémon found"
-//    static let loading = "Loading..."
-//    static let errorMessage = "Something went wrong. Please try again."
+    static let noResults = "No Pokémon found"
+    static let tryWithAnotherParam = "Try searching by name or number"
+    static let loading = "Loading..."
+    static let errorMessage = "Something went wrong. Please try again."
 }

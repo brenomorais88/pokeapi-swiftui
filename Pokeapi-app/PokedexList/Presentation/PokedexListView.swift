@@ -55,31 +55,65 @@ struct PokedexListView: View {
         .padding(.vertical, 8)
     }
 
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 48))
+                .foregroundColor(.gray)
+
+            Text(Strings.noResults)
+                .font(.headline)
+                .foregroundColor(.gray)
+
+            Text(Strings.tryWithAnotherParam)
+                .font(.subheadline)
+                .foregroundColor(.gray.opacity(0.7))
+        }
+        .padding()
+    }
+
     private var pokemonGrid: some View {
-        ScrollView {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
-                ForEach(viewModel.filteredPokemons) { pokemon in
-                    NavigationLink(
-                        destination: PokemonDetailView(
-                            viewModel: PokemonDetailViewModel(
-                                id: pokemon.id,
-                                name: pokemon.name,
-                                imageURL: pokemon.imageURL
-                            )
-                        )
-                    ) {
-                        PokemonCardView(pokemon: pokemon)
-                            .onAppear {
-                                if pokemon == viewModel.filteredPokemons.last {
-                                    Task { await viewModel.loadNextPage() }
-                                }
+        Group {
+            if viewModel.filteredPokemons.isEmpty && !viewModel.searchText.isEmpty {
+                VStack {
+                    Spacer()
+                    emptyState
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
+                        ForEach(viewModel.filteredPokemons) { pokemon in
+                            NavigationLink(
+                                destination: PokemonDetailView(
+                                    viewModel: PokemonDetailViewModel(
+                                        id: pokemon.id,
+                                        name: pokemon.name,
+                                        imageURL: pokemon.imageURL
+                                    )
+                                )
+                            ) {
+                                PokemonCardView(pokemon: pokemon)
+                                    .onAppear {
+                                        if pokemon == viewModel.filteredPokemons.last {
+                                            Task { await viewModel.loadNextPage() }
+                                        }
+                                    }
                             }
+                        }
+                    }
+                    .padding()
+
+                    if viewModel.isLoading {
+                        ProgressView(Strings.loading)
+                            .padding()
                     }
                 }
             }
-            .padding()
         }
     }
+
 }
 
 #Preview {
