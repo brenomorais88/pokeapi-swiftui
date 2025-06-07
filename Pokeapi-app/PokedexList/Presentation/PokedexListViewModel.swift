@@ -76,4 +76,8 @@ final class PokedexListViewModel: ObservableObject {
 
         isLoading = false
     }
+
+    func toggleSortType() {
+        sortType = sortType == .number ? .name : .number
+    }
 }

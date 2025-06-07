@@ -5,6 +5,7 @@
 //  Created by Breno Morais on 06/06/25.
 //
 
+import SwiftUICore
 
 enum Constants {
     enum URLs {
@@ -13,5 +14,9 @@ enum Constants {
 
     enum API {
         static let baseURL = "https://pokeapi.co/api/v2/"
+    }
+
+    enum colors {
+        static let primaryColor = Color.red
     }
 }

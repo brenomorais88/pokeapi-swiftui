@@ -15,45 +15,68 @@ struct PokedexListView: View {
             VStack(spacing: 0) {
                 header
                 searchAndSortBar
-                pokemonGrid
+                pokemonGridView
             }
             .navigationBarHidden(true)
+            .background(Constants.colors.primaryColor)
         }
     }
 
     private var header: some View {
-        Text(Strings.appTitle)
-            .font(.largeTitle).bold()
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.red)
+        HStack(alignment: .center, spacing: 12) {
+            Image("pokeball-image-small")
+                .resizable()
+                .renderingMode(.original)
+                .frame(width: 32, height: 32)
+
+            Text(Strings.appTitle)
+                .font(.system(size: 28, weight: .bold))
+                .foregroundColor(.white)
+
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 16)
+        .background(Constants.colors.primaryColor)
     }
 
     private var searchAndSortBar: some View {
         HStack(spacing: 12) {
-            TextField(Strings.searchPlaceholder,
-                      text: $viewModel.searchText)
-            .textFieldStyle(RoundedBorderTextFieldStyle())
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.red)
+
+                TextField(Strings.searchPlaceholder, text: $viewModel.searchText)
+                    .foregroundColor(.primary)
+            }
+            .padding(.vertical, 10)
             .padding(.horizontal)
+            .background(Color.white)
+            .cornerRadius(40)
+            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
 
             Menu {
                 Picker(Strings.sortBy, selection: $viewModel.sortType) {
-                    Text(Strings.sortByNumber)
-                        .tag(SortType.number)
-                    Text(Strings.sortByName)
-                        .tag(SortType.name)
+                    Text(Strings.sortByNumber).tag(SortType.number)
+                    Text(Strings.sortByName).tag(SortType.name)
                 }
             } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .padding()
-                    .background(Color.white)
-                    .clipShape(Circle())
+                Image(viewModel.sortType == .number ? "sort-number" : "sort-text")
+                    .resizable()
+                    .renderingMode(.original)
+                    .frame(width: 35, height: 35)
+                    .background(
+                        Circle()
+                            .fill(Color.white)
+                            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                    )
             }
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
+        .background(Constants.colors.primaryColor)
     }
+
 
     private var emptyState: some View {
         VStack(spacing: 12) {
@@ -95,7 +118,7 @@ struct PokedexListView: View {
         .padding()
     }
 
-    private var pokemonGrid: some View {
+    private var pokemonGridView: some View {
         Group {
             if viewModel.errorMessage != nil {
                 VStack {
@@ -112,34 +135,53 @@ struct PokedexListView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
-                        ForEach(viewModel.filteredPokemons) { pokemon in
-                            NavigationLink(
-                                destination: PokemonDetailView(
-                                    viewModel: PokemonDetailViewModel(
-                                        id: pokemon.id,
-                                        name: pokemon.name,
-                                        imageURL: pokemon.imageURL
-                                    )
-                                )
-                            ) {
-                                PokemonCardView(pokemon: pokemon)
-                                    .onAppear {
-                                        if pokemon == viewModel.filteredPokemons.last {
-                                            Task { await viewModel.loadNextPage() }
-                                        }
-                                    }
-                            }
-                        }
-                    }
-                    .padding()
+                pokemonGridContainer
+            }
+        }
+    }
 
-                    if viewModel.isLoading {
-                        ProgressView(Strings.loading)
-                            .padding()
+    private var pokemonGridContainer: some View {
+        VStack {
+            pokemonGrid
+        }
+        .padding(8)
+        .background(Color.white)
+        .cornerRadius(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.red, lineWidth: 0)
+        )
+        .padding(.horizontal, 8)
+        .padding(.bottom, 0)
+    }
+
+    private var pokemonGrid: some View {
+        ScrollView {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
+                ForEach(viewModel.filteredPokemons) { pokemon in
+                    NavigationLink(
+                        destination: PokemonDetailView(
+                            viewModel: PokemonDetailViewModel(
+                                id: pokemon.id,
+                                name: pokemon.name,
+                                imageURL: pokemon.imageURL
+                            )
+                        )
+                    ) {
+                        PokemonCardView(pokemon: pokemon)
+                            .onAppear {
+                                if pokemon == viewModel.filteredPokemons.last {
+                                    Task { await viewModel.loadNextPage() }
+                                }
+                            }
                     }
                 }
+            }
+            .padding()
+
+            if viewModel.isLoading {
+                ProgressView(Strings.loading)
+                    .padding()
             }
         }
     }
