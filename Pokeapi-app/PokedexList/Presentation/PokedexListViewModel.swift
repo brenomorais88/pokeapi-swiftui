@@ -31,9 +31,23 @@ final class PokedexListViewModel: ObservableObject {
     }
 
     var filteredPokemons: [PokemonViewData] {
-        let filtered = searchText.isEmpty
-        ? pokemons
-        : pokemons.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        let trimmedSearch = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let cleanedSearch = trimmedSearch.replacingOccurrences(of: "#", with: "")
+
+        let filtered: [PokemonViewData]
+
+        if cleanedSearch.isEmpty {
+            filtered = pokemons
+        } else {
+            filtered = pokemons.filter { pokemon in
+                let idString = String(pokemon.id)
+                let paddedId = String(format: "%03d", pokemon.id)
+
+                return pokemon.name.lowercased().contains(cleanedSearch)
+                    || idString.contains(cleanedSearch)
+                    || paddedId.contains(cleanedSearch)
+            }
+        }
 
         switch sortType {
         case .number:
