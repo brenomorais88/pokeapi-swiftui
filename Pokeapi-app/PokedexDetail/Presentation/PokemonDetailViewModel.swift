@@ -18,6 +18,9 @@ final class PokemonDetailViewModel: ObservableObject {
     @Published var moves: [String] = []
     @Published var description: String = ""
     @Published var stats: [PokemonStatViewData] = []
+    @Published var isLoading: Bool = false
+    @Published var hasError: Bool = false
+    @Published var errorMessage: String = ""
 
     private let fetchUseCase: FetchPokemonDetailUseCaseProtocol
 
@@ -36,9 +39,14 @@ final class PokemonDetailViewModel: ObservableObject {
     }
 
     func fetchDetails() async {
+        await MainActor.run {
+            isLoading = true
+            hasError = false
+            errorMessage = ""
+        }
+
         do {
             let details = try await fetchUseCase.execute(id: id)
-
             await MainActor.run {
                 types = details.types
                 weight = "\(Double(details.weight) / 10.0) kg"
@@ -50,10 +58,14 @@ final class PokemonDetailViewModel: ObservableObject {
                                         value: $0.value,
                                         statsLabel: mapStatsLabel($0.label))
                 }
+                isLoading = false
             }
-
         } catch {
-            print("Erro ao carregar detalhes: \(error)")
+            await MainActor.run {
+                hasError = true
+                errorMessage = Strings.failedLoadDetails
+                isLoading = false
+            }
         }
     }
 

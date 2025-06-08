@@ -24,4 +24,5 @@ enum Strings {
     static let height = "Height"
     static let moves = "Moves"
     static let baseStats = "Base Stats"
+    static let failedLoadDetails = "Failed to load Pokémon details. Please try again."
 }
