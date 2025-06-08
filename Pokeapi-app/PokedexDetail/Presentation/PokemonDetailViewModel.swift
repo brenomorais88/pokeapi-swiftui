@@ -11,7 +11,6 @@ final class PokemonDetailViewModel: ObservableObject {
     let id: Int
     let name: String
     let imageURL: URL?
-    var goBack: (() -> Void)? = nil
 
     @Published var types: [String] = []
     @Published var weight: String = "--"

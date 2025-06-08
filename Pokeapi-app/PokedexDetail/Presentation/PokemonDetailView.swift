@@ -9,61 +9,94 @@ import SwiftUI
 
 struct PokemonDetailView: View {
     @ObservedObject var viewModel: PokemonDetailViewModel
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                header
-                types
-                aboutSection
-                description
-                statsSection
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                Color(viewModel.backgroundColor)
+                    .ignoresSafeArea()
+                headerContent
+                    .frame(width: geometry.size.width)
+                    .zIndex(1)
+                ScrollView {
+                    VStack(spacing: 16) {
+                        bodyContent
+                    }
+                    .padding()
+                    .padding(.top, 48)
+                }
             }
-            .padding()
         }
-        .background(viewModel.backgroundColor.ignoresSafeArea())
         .onAppear {
             Task {
                 await viewModel.fetchDetails()
             }
         }
+        .navigationBarHidden(true)
     }
 
-    private var header: some View {
-        VStack(spacing: 8) {
-            HStack {
-                Button(action: {
-                    viewModel.goBack?()
-                }) {
-                    Image(systemName: "chevron.left")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                }
-
-                Spacer()
-
-                Text("#\(String(format: "%03d", viewModel.id))")
+    private var headerContent: some View {
+        HStack {
+            Button(action: {
+                dismiss()
+            }) {
+                Image("back-button")
+                    .font(.title2)
                     .foregroundColor(.white)
-                    .bold()
             }
 
-            HStack {
-                Text(viewModel.name)
-                    .font(.largeTitle)
-                    .bold()
-                    .foregroundColor(.white)
+            Text(viewModel.name)
+                .font(.largeTitle)
+                .bold()
+                .foregroundColor(.white)
 
-                Spacer()
+            Spacer()
+
+            Text("#\(String(format: "%03d", viewModel.id))")
+                .foregroundColor(.white)
+                .bold()
+        }
+        .background(.clear)
+        .padding(16)
+    }
+
+    private var bodyContent: some View {
+        ZStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 16) {
+                types
+                aboutSection
+                description
+                statsSection
             }
+            .padding(24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(Color.white)
+                    .ignoresSafeArea(edges: .bottom)
+            )
+            .padding(.top, 190)
+            .zIndex(0)
 
-            if let imageURL = viewModel.imageURL {
-                AsyncImage(url: imageURL) { image in
-                    image.resizable()
-                } placeholder: {
-                    ProgressView()
+            VStack(spacing: 8) {
+                Image("pokeball-background")
+                    .resizable()
+                    .frame(width: 208, height: 208)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .offset(y: -40)
+
+                if let imageURL = viewModel.imageURL {
+                    AsyncImage(url: imageURL) { image in
+                        image.resizable()
+                    } placeholder: {
+                        ProgressView()
+                    }
+                    .frame(width: 200, height: 200)
+                    .offset(y: -180)
                 }
-                .frame(width: 160, height: 160)
             }
+            .zIndex(1)
         }
     }
 
