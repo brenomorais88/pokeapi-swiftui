@@ -19,4 +19,11 @@ enum Strings {
     static let errorMessage = "Something went wrong. Please try again."
     static let tryAgain = "Try Again"
     static let unknownError = "Unknown error"
+    static let about = "About"
+    static let weight = "Weight"
+    static let height = "Height"
+    static let moves = "Moves"
+    static let baseStats = "Base Stats"
+
+
 }

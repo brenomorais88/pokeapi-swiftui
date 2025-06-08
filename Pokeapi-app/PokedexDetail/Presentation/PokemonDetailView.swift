@@ -63,7 +63,7 @@ struct PokemonDetailView: View {
 
     private var bodyContent: some View {
         ZStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .center, spacing: 16) {
                 types
                 aboutSection
                 description
@@ -93,7 +93,7 @@ struct PokemonDetailView: View {
                         ProgressView()
                     }
                     .frame(width: 200, height: 200)
-                    .offset(y: -180)
+                    .offset(y: -190)
                 }
             }
             .zIndex(1)
@@ -104,77 +104,110 @@ struct PokemonDetailView: View {
         HStack {
             ForEach(viewModel.types, id: \.self) { type in
                 Text(type.capitalized)
-                    .font(.caption)
+                    .font(.subheadline)
+                    .bold()
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color.white.opacity(0.2))
+                    .background(Color(viewModel.backgroundColor))
                     .foregroundColor(.white)
                     .cornerRadius(12)
             }
-        }
+        }.padding(.top, 50)
     }
 
     private var aboutSection: some View {
-        VStack(spacing: 12) {
-            Text("About")
+        VStack(spacing: 16) {
+            Text(Strings.about)
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundColor(Color(viewModel.backgroundColor))
+                .bold()
 
-            HStack {
-                VStack {
-                    Text(viewModel.weight)
-                    Text("Weight")
+            HStack(alignment: .bottom) {
+                VStack(spacing: 8) {
+                    HStack(spacing: 4) {
+                        Image("weight-icon")
+                        Text(viewModel.weight)
+                            .font(.subheadline)
+                            .foregroundColor(.black)
+                    }
+                    Text(Strings.weight)
                         .font(.caption)
+                        .font(.system(size: 12))
                         .foregroundColor(.gray)
                 }
-                Spacer()
-                VStack {
-                    Text(viewModel.height)
-                    Text("Height")
+                .frame(maxWidth: .infinity)
+
+                Divider()
+                    .frame(height: 40)
+
+                VStack(spacing: 8) {
+                    HStack(spacing: 4) {
+                        Image("height-icon")
+                        Text(viewModel.height)
+                            .font(.subheadline)
+                            .foregroundColor(.black)
+                    }
+                    Text(Strings.height)
                         .font(.caption)
+                        .font(.system(size: 12))
                         .foregroundColor(.gray)
                 }
-                Spacer()
-                VStack {
+                .frame(maxWidth: .infinity)
+
+                Divider()
+                    .frame(height: 40)
+
+                VStack(spacing: 8) {
                     Text(viewModel.moves.joined(separator: "\n"))
-                    Text("Moves")
+                        .font(.system(size: 12))
+                        .foregroundColor(.black)
+                    Text(Strings.moves)
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
+                .frame(maxWidth: .infinity)
             }
-            .foregroundColor(.white)
         }
         .padding()
-        .background(Color.white.opacity(0.1))
+        .background(Color.white)
         .cornerRadius(16)
+        .frame(height: 130)
     }
 
     private var description: some View {
         Text(viewModel.description)
-            .foregroundColor(.white)
-            .font(.body)
+            .foregroundColor(.black)
+            .font(.system(size: 16))
             .multilineTextAlignment(.leading)
             .padding(.top)
     }
 
     private var statsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Base Stats")
+        VStack(alignment: .center, spacing: 0) {
+            Text(Strings.baseStats)
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundColor(Color(viewModel.backgroundColor))
+                .bold()
+                .padding(.bottom, 16)
 
             ForEach(viewModel.stats, id: \.label) { stat in
                 HStack {
-                    Text(stat.label)
-                        .frame(width: 50, alignment: .leading)
-                        .foregroundColor(.white)
+                    Text(stat.statsLabel)
+                        .frame(width: 35, alignment: .trailing)
+                        .foregroundColor(Color(viewModel.backgroundColor))
+                        .font(.system(size: 12))
+                        .bold()
+
+                    Divider()
+                        .frame(height: 20)
 
                     Text(String(format: "%03d", stat.value))
-                        .frame(width: 40, alignment: .leading)
-                        .foregroundColor(.white)
+                        .frame(width: 30, alignment: .leading)
+                        .foregroundColor(.black)
+                        .font(.system(size: 12))
 
-                    ProgressView(value: Float(stat.value) / 100)
-                        .tint(.white)
+                    ProgressView(value: min(max(Float(stat.value) / 255.0, 0.0), 1.0))
+                        .tint(Color(viewModel.backgroundColor))
                 }
             }
         }

@@ -8,4 +8,5 @@
 struct PokemonStatViewData {
     let label: String
     let value: Int
+    let statsLabel: String
 }

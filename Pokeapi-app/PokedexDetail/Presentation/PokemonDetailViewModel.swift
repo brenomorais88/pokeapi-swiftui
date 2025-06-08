@@ -42,10 +42,24 @@ final class PokemonDetailViewModel: ObservableObject {
                 height = "\(Double(details.height) / 10.0) m"
                 moves = details.moves.prefix(2).map { $0.capitalized }
                 description = details.description
-                stats = details.stats.map { PokemonStatViewData(label: $0.label, value: $0.value) }
+                stats = details.stats.map { PokemonStatViewData(label: $0.label,
+                                                                value: $0.value,
+                                                                statsLabel: mapStatsLabel($0.label)) }
             }
         } catch {
             print("Erro ao carregar detalhes: \(error)")
         }
+    }
+
+    private func mapStatsLabel(_ label: String) -> String {
+        let mapping: [String: String] = [
+            "hp": "HP",
+            "attack": "ATK",
+            "defense": "DEF",
+            "special-attack": "SATK",
+            "special-defense": "SDEF",
+            "speed": "SPD"
+        ]
+        return mapping[label.lowercased()] ?? label.capitalized
     }
 }
