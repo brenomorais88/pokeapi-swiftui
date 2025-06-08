@@ -8,7 +8,7 @@
 final class PokemonDetailRepositoryImpl: PokemonDetailRepository {
     private let apiService: PokemonDetailAPIServiceProtocol
 
-    init(apiService: PokemonDetailAPIServiceProtocol) {
+    init(apiService: PokemonDetailAPIServiceProtocol = PokemonDetailAPIService()) {
         self.apiService = apiService
     }
 

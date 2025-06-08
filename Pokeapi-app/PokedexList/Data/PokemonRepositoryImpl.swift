@@ -18,7 +18,10 @@ final class PokemonRepositoryImpl: PokemonRepository {
         let results = try await apiService.fetchPokemonList(limit: limit, offset: offset)
 
         return results.compactMap { item in
-            guard let id = Int(item.url.trimmingCharacters(in: CharacterSet(charactersIn: "/")).components(separatedBy: "/").last ?? "") else {
+            guard let id = Int(item.url
+                .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                .components(separatedBy: "/")
+                .last ?? "") else {
                 return nil
             }
 

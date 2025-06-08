@@ -19,7 +19,7 @@ final class PokemonDetailViewModel: ObservableObject {
     @Published var description: String = ""
     @Published var stats: [PokemonStatViewData] = []
 
-    private let fetchUseCase: FetchPokemonDetailUseCase
+    private let fetchUseCase: FetchPokemonDetailUseCaseProtocol
 
     var backgroundColor: Color {
         guard let mainType = types.first?.lowercased() else {
@@ -28,7 +28,7 @@ final class PokemonDetailViewModel: ObservableObject {
         return PokemonTypeColor.color(for: mainType)
     }
 
-    init(id: Int, name: String, imageURL: URL?, fetchUseCase: FetchPokemonDetailUseCase) {
+    init(id: Int, name: String, imageURL: URL?, fetchUseCase: FetchPokemonDetailUseCaseProtocol = FetchPokemonDetailUseCase()) {
         self.id = id
         self.name = name.capitalized
         self.imageURL = imageURL

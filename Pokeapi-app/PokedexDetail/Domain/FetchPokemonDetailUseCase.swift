@@ -5,10 +5,14 @@
 //  Created by Breno Morais on 08/06/25.
 //
 
-final class FetchPokemonDetailUseCase {
+protocol FetchPokemonDetailUseCaseProtocol {
+    func execute(id: Int) async throws -> PokemonDetail
+}
+
+final class FetchPokemonDetailUseCase: FetchPokemonDetailUseCaseProtocol {
     private let repository: PokemonDetailRepository
 
-    init(repository: PokemonDetailRepository) {
+    init(repository: PokemonDetailRepository = PokemonDetailRepositoryImpl()) {
         self.repository = repository
     }
 
