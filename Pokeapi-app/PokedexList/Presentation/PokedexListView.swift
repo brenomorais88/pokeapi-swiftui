@@ -9,6 +9,7 @@ import SwiftUI
 
 struct PokedexListView: View {
     @StateObject private var viewModel = PokedexListViewModel()
+    private let coordinator = PokedexCoordinator()
 
     var body: some View {
         NavigationView {
@@ -159,20 +160,7 @@ struct PokedexListView: View {
         ScrollView {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
                 ForEach(viewModel.filteredPokemons) { pokemon in
-                    NavigationLink(
-                        destination: {
-                            let apiService = PokemonDetailAPIService()
-                            let repository = PokemonDetailRepositoryImpl(apiService: apiService)
-                            let useCase = FetchPokemonDetailUseCase(repository: repository)
-                            let detailViewModel = PokemonDetailViewModel(
-                                id: pokemon.id,
-                                name: pokemon.name,
-                                imageURL: pokemon.imageURL,
-                                fetchUseCase: useCase
-                            )
-                            return PokemonDetailView(viewModel: detailViewModel)
-                        }()
-                    ) {
+                    NavigationLink(destination: coordinator.pokemonDetail(for: pokemon)) {
                         PokemonCardView(pokemon: pokemon)
                             .onAppear {
                                 if pokemon == viewModel.filteredPokemons.last {
