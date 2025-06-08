@@ -7,25 +7,37 @@
 
 import Foundation
 
-final class PokemonDetailAPIService {
-    func fetchDetails(id: Int) async throws -> PokemonDetail {
-        async let detailData = fetchPokemonData(id: id)
-        async let speciesData = fetchPokemonSpecies(id: id)
+import Foundation
 
-        let (detail, species) = try await (detailData, speciesData)
+protocol PokemonDetailAPIServiceProtocol {
+    func fetchDetails(id: Int) async throws -> PokemonDetail
+}
+
+enum PokemonDetailAPIError: Error {
+    case invalidURL
+    case decodingFailed
+}
+
+final class PokemonDetailAPIService: PokemonDetailAPIServiceProtocol {
+    func fetchDetails(id: Int) async throws -> PokemonDetail {
+        async let detailDTO = fetchPokemonData(id: id)
+        async let speciesDTO = fetchPokemonSpecies(id: id)
+
+        let (detail, species) = try await (detailDTO, speciesDTO)
+
+        guard let imageURL = makeImageURL(for: id) else {
+            throw PokemonDetailAPIError.invalidURL
+        }
 
         return PokemonDetail(
             id: id,
-            name: detail.name,
-            imageURL: URL(string: Constants.URLs.baseImageURL + "\(id).png")!,
-            types: detail.types.map { $0.type.name },
+            name: detail.name.capitalized,
+            imageURL: imageURL,
+            types: detail.types.map { $0.type.name.capitalized },
             height: detail.height,
             weight: detail.weight,
-            moves: detail.moves.prefix(2).map { $0.move.name },
-            description: species.flavorTextEntries
-                .first(where: { $0.language.name == "en" })?.flavorText
-                .replacingOccurrences(of: "\n", with: " ")
-                .replacingOccurrences(of: "\u{0C}", with: " ") ?? "",
+            moves: detail.moves.prefix(2).map { $0.move.name.capitalized },
+            description: extractEnglishDescription(from: species),
             stats: detail.stats.map {
                 PokemonStat(label: $0.stat.name.uppercased(), value: $0.baseStat)
             }
@@ -35,14 +47,41 @@ final class PokemonDetailAPIService {
     // MARK: - Private Helpers
 
     private func fetchPokemonData(id: Int) async throws -> PokemonDetailDTO {
-        let url = URL(string: "\(Constants.API.baseURL)pokemon/\(id)")!
+        guard let url = makePokemonDetailURL(id: id) else {
+            throw PokemonDetailAPIError.invalidURL
+        }
+
         let (data, _) = try await URLSession.shared.data(from: url)
         return try JSONDecoder().decode(PokemonDetailDTO.self, from: data)
     }
 
     private func fetchPokemonSpecies(id: Int) async throws -> PokemonSpeciesDTO {
-        let url = URL(string: "\(Constants.API.baseURL)pokemon-species/\(id)")!
+        guard let url = makePokemonSpeciesURL(id: id) else {
+            throw PokemonDetailAPIError.invalidURL
+        }
+
         let (data, _) = try await URLSession.shared.data(from: url)
         return try JSONDecoder().decode(PokemonSpeciesDTO.self, from: data)
+    }
+
+    private func makePokemonDetailURL(id: Int) -> URL? {
+        URL(string: "\(Constants.API.baseURL)pokemon/\(id)")
+    }
+
+    private func makePokemonSpeciesURL(id: Int) -> URL? {
+        URL(string: "\(Constants.API.baseURL)pokemon-species/\(id)")
+    }
+
+    private func makeImageURL(for id: Int) -> URL? {
+        URL(string: "\(Constants.URLs.baseImageURL)\(id).png")
+    }
+
+    private func extractEnglishDescription(from species: PokemonSpeciesDTO) -> String {
+        species.flavorTextEntries
+            .first(where: { $0.language.name == "en" })?
+            .flavorText
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\u{0C}", with: " ")
+            ?? ""
     }
 }

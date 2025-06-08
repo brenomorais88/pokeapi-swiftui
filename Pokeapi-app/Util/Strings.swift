@@ -24,6 +24,4 @@ enum Strings {
     static let height = "Height"
     static let moves = "Moves"
     static let baseStats = "Base Stats"
-
-
 }

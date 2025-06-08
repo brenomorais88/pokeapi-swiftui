@@ -82,15 +82,15 @@ struct PokedexListView: View {
         VStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 48))
-                .foregroundColor(.gray)
+                .foregroundColor(.white)
 
             Text(Strings.noResults)
                 .font(.headline)
-                .foregroundColor(.gray)
+                .foregroundColor(.white)
 
             Text(Strings.tryWithAnotherParam)
                 .font(.subheadline)
-                .foregroundColor(.gray.opacity(0.7))
+                .foregroundColor(.white.opacity(0.7))
         }
         .padding()
     }
