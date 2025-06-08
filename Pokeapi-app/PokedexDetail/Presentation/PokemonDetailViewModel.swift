@@ -19,33 +19,39 @@ final class PokemonDetailViewModel: ObservableObject {
     @Published var description: String = ""
     @Published var stats: [PokemonStatViewData] = []
 
+    private let fetchUseCase: FetchPokemonDetailUseCase
+
     var backgroundColor: Color {
         guard let mainType = types.first?.lowercased() else {
             return .gray
         }
-
         return PokemonTypeColor.color(for: mainType)
     }
 
-    init(id: Int, name: String, imageURL: URL?) {
+    init(id: Int, name: String, imageURL: URL?, fetchUseCase: FetchPokemonDetailUseCase) {
         self.id = id
         self.name = name.capitalized
         self.imageURL = imageURL
+        self.fetchUseCase = fetchUseCase
     }
 
     func fetchDetails() async {
         do {
-            let details = try await PokemonDetailAPIService().fetchDetails(id: id)
+            let details = try await fetchUseCase.execute(id: id)
+
             await MainActor.run {
                 types = details.types
                 weight = "\(Double(details.weight) / 10.0) kg"
                 height = "\(Double(details.height) / 10.0) m"
                 moves = details.moves.prefix(2).map { $0.capitalized }
                 description = details.description
-                stats = details.stats.map { PokemonStatViewData(label: $0.label,
-                                                                value: $0.value,
-                                                                statsLabel: mapStatsLabel($0.label)) }
+                stats = details.stats.map {
+                    PokemonStatViewData(label: $0.label,
+                                        value: $0.value,
+                                        statsLabel: mapStatsLabel($0.label))
+                }
             }
+
         } catch {
             print("Erro ao carregar detalhes: \(error)")
         }

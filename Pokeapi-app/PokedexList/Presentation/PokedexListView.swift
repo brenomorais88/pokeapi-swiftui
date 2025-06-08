@@ -160,13 +160,18 @@ struct PokedexListView: View {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 16) {
                 ForEach(viewModel.filteredPokemons) { pokemon in
                     NavigationLink(
-                        destination: PokemonDetailView(
-                            viewModel: PokemonDetailViewModel(
+                        destination: {
+                            let apiService = PokemonDetailAPIService()
+                            let repository = PokemonDetailRepositoryImpl(apiService: apiService)
+                            let useCase = FetchPokemonDetailUseCase(repository: repository)
+                            let detailViewModel = PokemonDetailViewModel(
                                 id: pokemon.id,
                                 name: pokemon.name,
-                                imageURL: pokemon.imageURL
+                                imageURL: pokemon.imageURL,
+                                fetchUseCase: useCase
                             )
-                        )
+                            return PokemonDetailView(viewModel: detailViewModel)
+                        }()
                     ) {
                         PokemonCardView(pokemon: pokemon)
                             .onAppear {
@@ -185,7 +190,6 @@ struct PokedexListView: View {
             }
         }
     }
-
 }
 
 #Preview {
