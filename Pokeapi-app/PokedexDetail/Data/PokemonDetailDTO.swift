@@ -5,8 +5,6 @@
 //  Created by Breno Morais on 07/06/25.
 //
 
-
-
 struct PokemonDetailDTO: Decodable {
     struct StatEntry: Decodable {
         let baseStat: Int

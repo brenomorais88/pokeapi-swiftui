@@ -7,8 +7,6 @@
 
 import Foundation
 
-import Foundation
-
 protocol PokemonDetailAPIServiceProtocol {
     func fetchDetails(id: Int) async throws -> PokemonDetail
 }
