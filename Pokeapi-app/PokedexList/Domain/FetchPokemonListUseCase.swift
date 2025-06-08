@@ -5,7 +5,11 @@
 //  Created by Breno Morais on 06/06/25.
 //
 
-final class FetchPokemonListUseCase {
+protocol FetchPokemonListUseCaseProtocol {
+    func execute(limit: Int, offset: Int) async throws -> [PokemonViewData]
+}
+
+final class FetchPokemonListUseCase: FetchPokemonListUseCaseProtocol {
     private let repository: PokemonRepository
 
     init(repository: PokemonRepository = PokemonRepositoryImpl()) {

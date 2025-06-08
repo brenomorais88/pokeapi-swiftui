@@ -12,24 +12,32 @@ enum SortType {
     case name
 }
 
-final class PokedexListViewModel: ObservableObject {
+class PokedexListViewModel: ObservableObject {
+    // MARK: - Public Properties
+
     @Published var pokemons: [PokemonViewData] = []
     @Published var searchText: String = ""
     @Published var sortType: SortType = .number
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
 
+    // MARK: - Private Properties
+
     private var currentOffset = 0
     private let limit = 15
     private let maxPokemonID = 151
+    private let fetchPokemonUseCase: FetchPokemonListUseCaseProtocol
 
-    private let fetchPokemonUseCase = FetchPokemonListUseCase()
+    // MARK: - Init
 
-    init() {
+    init(fetchPokemonUseCase: FetchPokemonListUseCaseProtocol = FetchPokemonListUseCase()) {
+        self.fetchPokemonUseCase = fetchPokemonUseCase
         Task {
             await loadNextPage()
         }
     }
+
+    // MARK: - Computed
 
     var filteredPokemons: [PokemonViewData] {
         let trimmedSearch = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -57,6 +65,8 @@ final class PokedexListViewModel: ObservableObject {
             return filtered.sorted { $0.name < $1.name }
         }
     }
+
+    // MARK: - Public Methods
 
     @MainActor
     func loadNextPage() async {
