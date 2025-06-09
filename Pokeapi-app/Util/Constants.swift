@@ -17,6 +17,6 @@ enum Constants {
     }
 
     enum colors {
-        static let primaryColor = Color.red
+        static let primaryColor = Color(hex: 0xDC0A2D)
     }
 }
