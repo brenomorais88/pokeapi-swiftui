@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-import SwiftUI
-
 struct PokemonDetailView: View {
     @ObservedObject var viewModel: PokemonDetailViewModel
     @Environment(\.dismiss) private var dismiss
