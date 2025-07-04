@@ -6,20 +6,24 @@
 //
 
 import Foundation
+import Combine
 
 protocol PokemonAPIServiceProtocol {
-    func fetchPokemonList(limit: Int, offset: Int) async throws -> [PokemonItemDTO]
+    func fetchPokemonList(limit: Int, offset: Int) -> AnyPublisher<[PokemonItemDTO], Error>
 }
 
 final class PokemonAPIService: PokemonAPIServiceProtocol {
-    func fetchPokemonList(limit: Int, offset: Int) async throws -> [PokemonItemDTO] {
+    func fetchPokemonList(limit: Int, offset: Int) -> AnyPublisher<[PokemonItemDTO], Error> {
+
         guard let url = makeURL(limit: limit, offset: offset) else {
-            throw URLError(.badURL)
+            return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
         }
 
-        let (data, _) = try await URLSession.shared.data(from: url)
-        let decoded = try JSONDecoder().decode(PokemonListResponseDTO.self, from: data)
-        return decoded.results
+        return URLSession.shared.dataTaskPublisher(for: url)
+            .map(\.data)
+            .decode(type: PokemonListResponseDTO.self, decoder: JSONDecoder())
+            .map(\.results)
+            .eraseToAnyPublisher()
     }
 
     private func makeURL(limit: Int, offset: Int) -> URL? {

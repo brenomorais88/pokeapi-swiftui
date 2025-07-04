@@ -5,8 +5,10 @@
 //  Created by Breno Morais on 08/06/25.
 //
 
+import Combine
+
 protocol FetchPokemonDetailUseCaseProtocol {
-    func execute(id: Int) async throws -> PokemonDetail
+    func execute(id: Int) -> AnyPublisher<PokemonDetail, Error>
 }
 
 final class FetchPokemonDetailUseCase: FetchPokemonDetailUseCaseProtocol {
@@ -16,7 +18,7 @@ final class FetchPokemonDetailUseCase: FetchPokemonDetailUseCaseProtocol {
         self.repository = repository
     }
 
-    func execute(id: Int) async throws -> PokemonDetail {
-        return try await repository.fetchDetail(for: id)
+    func execute(id: Int) -> AnyPublisher<PokemonDetail, Error> {
+        repository.fetchDetail(for: id)
     }
 }

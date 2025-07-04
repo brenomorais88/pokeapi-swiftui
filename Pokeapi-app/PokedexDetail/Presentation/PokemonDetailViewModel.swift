@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 final class PokemonDetailViewModel: ObservableObject {
     let id: Int
@@ -23,6 +24,7 @@ final class PokemonDetailViewModel: ObservableObject {
     @Published var errorMessage: String = ""
 
     private let fetchUseCase: FetchPokemonDetailUseCaseProtocol
+    private var cancellables = Set<AnyCancellable>()
 
     var backgroundColor: Color {
         guard let mainType = types.first?.lowercased() else {
@@ -45,28 +47,30 @@ final class PokemonDetailViewModel: ObservableObject {
             errorMessage = ""
         }
 
-        do {
-            let details = try await fetchUseCase.execute(id: id)
-            await MainActor.run {
-                types = details.types
-                weight = "\(Double(details.weight) / 10.0) kg"
-                height = "\(Double(details.height) / 10.0) m"
-                moves = details.moves.prefix(2).map { $0.capitalized }
-                description = details.description
-                stats = details.stats.map {
+        fetchUseCase.execute(id: id)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                guard let self = self else { return }
+                self.isLoading = false
+                if case .failure(_) = completion {
+                    self.hasError = true
+                    self.errorMessage = Strings.failedLoadDetails
+                }
+            } receiveValue: { [weak self] detail in
+                guard let self = self else { return }
+                self.types = detail.types
+                self.weight = "\(Double(detail.weight) / 10.0) kg"
+                self.height = "\(Double(detail.height) / 10.0) m"
+                self.moves = detail.moves.prefix(2).map { $0.capitalized }
+                self.description = detail.description
+                self.stats = detail.stats.map {
                     PokemonStatViewData(label: $0.label,
                                         value: $0.value,
-                                        statsLabel: mapStatsLabel($0.label))
+                                        statsLabel: self.mapStatsLabel($0.label))
                 }
-                isLoading = false
-            }
-        } catch {
-            await MainActor.run {
-                hasError = true
-                errorMessage = Strings.failedLoadDetails
-                isLoading = false
-            }
-        }
+
+            }.store(in: &cancellables)
+
     }
 
     private func mapStatsLabel(_ label: String) -> String {

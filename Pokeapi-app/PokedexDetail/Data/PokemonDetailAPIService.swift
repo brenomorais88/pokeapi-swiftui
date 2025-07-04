@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import Combine
 
 protocol PokemonDetailAPIServiceProtocol {
-    func fetchDetails(id: Int) async throws -> PokemonDetail
+    func fetchDetails(id: Int) -> AnyPublisher<PokemonDetail, Error>
 }
 
 enum PokemonDetailAPIError: Error {
@@ -17,51 +18,43 @@ enum PokemonDetailAPIError: Error {
 }
 
 final class PokemonDetailAPIService: PokemonDetailAPIServiceProtocol {
-    func fetchDetails(id: Int) async throws -> PokemonDetail {
-        async let detailDTO = fetchPokemonData(id: id)
-        async let speciesDTO = fetchPokemonSpecies(id: id)
+    func fetchDetails(id: Int) -> AnyPublisher<PokemonDetail, Error> {
+        guard let detailURL = makePokemonDetailURL(id: id),
+              let speciesURL = makePokemonSpeciesURL(id: id),
+              let imageURL = makeImageURL(for: id) else {
 
-        let (detail, species) = try await (detailDTO, speciesDTO)
-
-        guard let imageURL = makeImageURL(for: id) else {
-            throw PokemonDetailAPIError.invalidURL
+            return Fail(error: PokemonDetailAPIError.invalidURL).eraseToAnyPublisher()
         }
 
-        return PokemonDetail(
-            id: id,
-            name: detail.name.capitalized,
-            imageURL: imageURL,
-            types: detail.types.map { $0.type.name.capitalized },
-            height: detail.height,
-            weight: detail.weight,
-            moves: detail.moves.prefix(2).map { $0.move.name.capitalized },
-            description: extractEnglishDescription(from: species),
-            stats: detail.stats.map {
-                PokemonStat(label: $0.stat.name.uppercased(), value: $0.baseStat)
+        let detailPublisher = URLSession.shared.dataTaskPublisher(for: detailURL)
+            .map(\.data)
+            .decode(type: PokemonDetailDTO.self, decoder: JSONDecoder())
+
+        let speciesPublisher = URLSession.shared.dataTaskPublisher(for: speciesURL)
+            .map(\.data)
+            .decode(type: PokemonSpeciesDTO.self, decoder: JSONDecoder())
+
+        return Publishers.Zip(detailPublisher, speciesPublisher)
+            .map { detail, species in
+                PokemonDetail(
+                    id: id,
+                    name: detail.name.capitalized,
+                    imageURL: imageURL,
+                    types: detail.types.map { $0.type.name.capitalized },
+                    height: detail.height,
+                    weight: detail.weight,
+                    moves: detail.moves.prefix(2).map { $0.move.name.capitalized },
+                    description: self.extractEnglishDescription(from: species),
+                    stats: detail.stats.map {
+                        PokemonStat(label: $0.stat.name.uppercased(), value: $0.baseStat)
+                    }
+                )
             }
-        )
+            .mapError { _ in PokemonDetailAPIError.decodingFailed }
+            .eraseToAnyPublisher()
     }
 
     // MARK: - Private Helpers
-
-    private func fetchPokemonData(id: Int) async throws -> PokemonDetailDTO {
-        guard let url = makePokemonDetailURL(id: id) else {
-            throw PokemonDetailAPIError.invalidURL
-        }
-
-        let (data, _) = try await URLSession.shared.data(from: url)
-        return try JSONDecoder().decode(PokemonDetailDTO.self, from: data)
-    }
-
-    private func fetchPokemonSpecies(id: Int) async throws -> PokemonSpeciesDTO {
-        guard let url = makePokemonSpeciesURL(id: id) else {
-            throw PokemonDetailAPIError.invalidURL
-        }
-
-        let (data, _) = try await URLSession.shared.data(from: url)
-        return try JSONDecoder().decode(PokemonSpeciesDTO.self, from: data)
-    }
-
     private func makePokemonDetailURL(id: Int) -> URL? {
         URL(string: "\(Constants.API.baseURL)pokemon/\(id)")
     }

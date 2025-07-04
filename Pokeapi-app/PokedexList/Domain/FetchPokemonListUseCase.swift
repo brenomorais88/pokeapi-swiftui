@@ -5,8 +5,10 @@
 //  Created by Breno Morais on 06/06/25.
 //
 
+import Combine
+
 protocol FetchPokemonListUseCaseProtocol {
-    func execute(limit: Int, offset: Int) async throws -> [PokemonViewData]
+    func execute(limit: Int, offset: Int) -> AnyPublisher<[PokemonViewData], Error>
 }
 
 final class FetchPokemonListUseCase: FetchPokemonListUseCaseProtocol {
@@ -16,7 +18,7 @@ final class FetchPokemonListUseCase: FetchPokemonListUseCaseProtocol {
         self.repository = repository
     }
 
-    func execute(limit: Int, offset: Int) async throws -> [PokemonViewData] {
-        try await repository.getPokemonList(limit: limit, offset: offset)
+    func execute(limit: Int, offset: Int) -> AnyPublisher<[PokemonViewData], Error> {
+        repository.getPokemonList(limit: limit, offset: offset)
     }
 }

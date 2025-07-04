@@ -5,6 +5,8 @@
 //  Created by Breno Morais on 08/06/25.
 //
 
+import Combine
+
 final class PokemonDetailRepositoryImpl: PokemonDetailRepository {
     private let apiService: PokemonDetailAPIServiceProtocol
 
@@ -12,7 +14,7 @@ final class PokemonDetailRepositoryImpl: PokemonDetailRepository {
         self.apiService = apiService
     }
 
-    func fetchDetail(for id: Int) async throws -> PokemonDetail {
-        return try await apiService.fetchDetails(id: id)
+    func fetchDetail(for id: Int) -> AnyPublisher<PokemonDetail, Error> {
+        apiService.fetchDetails(id: id)
     }
 }

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 enum SortType {
     case number
@@ -14,7 +15,6 @@ enum SortType {
 
 class PokedexListViewModel: ObservableObject {
     // MARK: - Public Properties
-
     @Published var pokemons: [PokemonViewData] = []
     @Published var searchText: String = ""
     @Published var sortType: SortType = .number
@@ -22,19 +22,16 @@ class PokedexListViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
 
     // MARK: - Private Properties
-
     private var currentOffset = 0
     private let limit = 15
     private let maxPokemonID = 151
     private let fetchPokemonUseCase: FetchPokemonListUseCaseProtocol
+    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Init
-
     init(fetchPokemonUseCase: FetchPokemonListUseCaseProtocol = FetchPokemonListUseCase()) {
         self.fetchPokemonUseCase = fetchPokemonUseCase
-        Task {
-            await loadNextPage()
-        }
+        loadNextPage()
     }
 
     // MARK: - Computed
@@ -67,23 +64,27 @@ class PokedexListViewModel: ObservableObject {
     }
 
     // MARK: - Public Methods
-
-    @MainActor
-    func loadNextPage() async {
+    func loadNextPage() {
         guard !isLoading else { return }
         guard pokemons.last?.id ?? 0 < maxPokemonID else { return }
 
         isLoading = true
         errorMessage = nil
 
-        do {
-            let newPokemons = try await fetchPokemonUseCase.execute(limit: limit, offset: currentOffset)
-            pokemons.append(contentsOf: newPokemons)
-            currentOffset += limit
-        } catch {
-            errorMessage = "Failed to load Pokémon. Please try again."
-        }
 
+
+        fetchPokemonUseCase.execute(limit: limit, offset: currentOffset)
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { [weak self] completion in
+                self?.isLoading = false
+                if case let .failure(error) = completion {
+                    self?.errorMessage = "Failed to load Pokémon. Please try again."
+                }
+            }, receiveValue: { [weak self] newPokemons in
+                self?.pokemons.append(contentsOf: newPokemons)
+                self?.currentOffset += self?.limit ?? 0
+            })
+            .store(in: &cancellables)
         isLoading = false
     }
 
